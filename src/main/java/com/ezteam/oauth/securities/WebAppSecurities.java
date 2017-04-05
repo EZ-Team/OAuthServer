@@ -9,6 +9,8 @@ import org.springframework.boot.web.servlet.ErrorPage;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,7 +24,9 @@ import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilt
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.filter.CompositeFilter;
 
 import javax.servlet.Filter;
@@ -49,6 +53,8 @@ public class WebAppSecurities extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and().exceptionHandling()
                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/"))
+                .and().logout().logoutSuccessUrl("/").permitAll()
+                .and().csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .and()
                 .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
     }
@@ -56,8 +62,8 @@ public class WebAppSecurities extends WebSecurityConfigurerAdapter {
     private Filter ssoFilter() {
         CompositeFilter filter = new CompositeFilter();
         List<Filter> filters = new ArrayList<>();
-        filters.add(ssoFilter(facebook(), "/login/facebook"));
         filters.add(ssoFilter(github(), "/login/github"));
+        filters.add(ssoFilter(facebook(), "/login/facebook"));
         filter.setFilters(filters);
         return filter;
     }
@@ -71,6 +77,10 @@ public class WebAppSecurities extends WebSecurityConfigurerAdapter {
         tokenServices.setRestTemplate(template);
         filter.setTokenServices(tokenServices);
         return filter;
+    }
+
+    @Bean public RequestContextListener requestContextListener(){
+        return new RequestContextListener();
     }
 
     @Bean
@@ -94,7 +104,7 @@ public class WebAppSecurities extends WebSecurityConfigurerAdapter {
         return registration;
     }
 
-    /*@Bean
+    @Bean
     public AuthoritiesExtractor authoritiesExtractor(OAuth2RestOperations template) {
         return map -> {
             String url = (String) map.get("organizations_url");
@@ -113,16 +123,11 @@ public class WebAppSecurities extends WebSecurityConfigurerAdapter {
         return new OAuth2RestTemplate(resource, context);
     }
 
-    @RequestMapping("/unauthenticated")
-    public String unauthenticated() {
-        return "redirect:/?error=true";
-    }
-
     @Bean
     public EmbeddedServletContainerCustomizer customizer() {
         return container -> {
             container.addErrorPages(
                     new ErrorPage(HttpStatus.UNAUTHORIZED, "/unauthenticated"));
         };
-    }*/
+    }
 }

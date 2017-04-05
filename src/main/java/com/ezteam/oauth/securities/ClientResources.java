@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
 
 /**
- * Created by a70850 on 05/04/2017.
+ * Created by aurelien on 05/04/2017.
  */
 class ClientResources {
 
