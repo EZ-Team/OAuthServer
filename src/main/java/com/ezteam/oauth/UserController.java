@@ -12,7 +12,7 @@ import java.util.Map;
  */
 @RestController
 public class UserController {
-    @RequestMapping({ "/user", "/me" })
+    @RequestMapping({ "/user", "/me", "/"})
     public Map<String, String> user(Principal principal) {
         Map<String, String> map = new LinkedHashMap<>();
         map.put("name", principal.getName());
